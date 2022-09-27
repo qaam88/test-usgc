@@ -4,6 +4,8 @@ import pandas as pd
 from datetime import date
 import pickle
 import plotly.express as px
+import dash
+import urllib
 
 from app_analysis import data_preprocess,make_plot,historical_price_vol
 
@@ -87,6 +89,7 @@ fig1 = {}
 # results_table = dash_table.DataTable(data=data,columns=columns)
 
 results_table = []
+dff = pd.DataFrame
 
 ######################################################################################################
 ### STYLE
@@ -241,6 +244,13 @@ content = html.Div(
         dcc.Graph(id = 'hischart', figure = fig1),
         dcc.Graph(id = 'chart', figure = fig1),
         # html.Div(id='display_ols', style={'whiteSpace': 'pre-wrap'}),
+        html.A(
+        'Download Data',
+        id='download-link',
+        download="rawdata.csv",
+        href="",
+        target="_blank"
+        ),
         html.Div(id="table1",children = results_table),
         
 
@@ -339,6 +349,18 @@ def update_plot(var1,n_clicks,price_contents,price_filename,price_last_modfidied
     data = results.to_dict('rows')
     columns =  [{"name": i, "id": i,} for i in (results.columns)]
     return fig,dash_table.DataTable(data=data,columns=columns)
+
+@app.callback(
+    Output('download-link', 'href'),
+    Input('table1', 'children'),
+    prevent_initial_call=True,
+)
+def update_download_link(filter_value):
+    dff = filter_value
+    csv_string = dff.to_csv(index=False, encoding='utf-8')
+    csv_string = "data:text/csv;charset=utf-8," + urllib.quote(csv_string)
+    return csv_string
+
 
 # @app.callback(
 #     Output('chart', 'figure'),

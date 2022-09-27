@@ -95,6 +95,7 @@ results_table = []
 #external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app.config['suppress_callback_exceptions']=True
 
 # the style arguments for the sidebar. We use position:fixed and a fixed width
 SIDEBAR_STYLE = {
@@ -338,7 +339,7 @@ def update_plot(var1,n_clicks,price_contents,price_filename,price_last_modfidied
 
     data = results.to_dict('rows')
     columns =  [{"name": i, "id": i,} for i in (results.columns)]
-    return fig,dash_table.DataTable(data=data,columns=columns)
+    return fig,dash_table.DataTable(data=data,columns=columns,export_format= 'csv')
 
 # @app.callback(
 #     Output('chart', 'figure'),
