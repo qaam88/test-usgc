@@ -16,11 +16,11 @@ from plotly.subplots import make_subplots
 
 #reading price data
 
-price_data = pd.read_csv('price_data_template.csv')
+price_data = pd.read_csv('price_data_v2.csv')
 
 #reading volume data
 
-vol_data = pd.read_csv('CPL_net_traded_volume_template.csv')
+vol_data = pd.read_csv('CPL_net_traded_volume.csv')
 
 # converting date to datetime format
 
@@ -53,7 +53,7 @@ def data_preprocess(price_data,vol_data):
     merged_data1['CBOB_CYCLE']=merged_data1['PCBOB_CYCLE']
     merged_data1[merged_data1.isna().any(axis=1)]
 
-    date_series_to_drop = (merged_data1[merged_data1['CBOB_PRICE']
+    date_series_to_drop = (merged_data1[merged_data1['CBOB_BASIS']
                                         .isna()]
                            .index
                           )
@@ -111,7 +111,7 @@ def data_preprocess(price_data,vol_data):
     clean_merged_data['yr_cy'] = clean_merged_data['year'].astype('int32').astype(str)+"_"+clean_merged_data['CBOB_CYCLE'].astype('int32').astype(str).str.zfill(2)
     clean_merged_data
     
-#     clean_merged_data = clean_merged_data.rename(columns={'PCBOB_TO_CBOB':'PCBOB_BASIS','PBOB_TO_RBOB':'PBOB_BASIS','JET_REGRADE':'JET_BASIS'})
+    clean_merged_data = clean_merged_data.rename(columns={'PCBOB_TO_CBOB':'PCBOB_BASIS','PBOB_TO_RBOB':'PBOB_BASIS','JET_REGRADE':'JET_BASIS'})
     
     
     clean_merged_data_vol_list = clean_merged_data.columns[clean_merged_data.columns.str.contains('NetCPL')]
@@ -122,7 +122,7 @@ def data_preprocess(price_data,vol_data):
         
     clean_merged_data_vol_list = clean_merged_data.columns[clean_merged_data.columns.str.contains('NetCPL')]
         
-    clean_merged_data_price_list = clean_merged_data.columns[clean_merged_data.columns.str.contains('_PRICE')]
+    clean_merged_data_price_list = clean_merged_data.columns[clean_merged_data.columns.str.contains('_BASIS')]
     
     clean_merged_data_agg_cy_price = clean_merged_data.groupby('yr_cy')[clean_merged_data_price_list].mean()
     clean_merged_data_agg_cy_volume = clean_merged_data.groupby('yr_cy')[clean_merged_data_vol_list].sum()
@@ -137,7 +137,7 @@ def data_preprocess(price_data,vol_data):
 
     return clean_merged_data,clean_merged_data_agg_cy
 
-clean_merged_data,clean_merged_data_agg_cy = data_preprocess(price_data,vol_data)
+clean_merged_data = data_preprocess(price_data,vol_data)
 
 period_dict = {}
 
@@ -158,11 +158,11 @@ def make_plot(df,period,start_date1,end_date1,product,n_click_reset = 1):
         winter_df = df[period_dict[key][0]:period_dict[key][1]].query('CBOB_RVP > 9')
         product_summer_df = (summer_df
                                 .groupby('yr_cy')
-                                .agg(price_basis_average=(str(product) +'_PRICE','mean'),vol_sum = ('NetCPL_'+str(product),'sum'),Kvol_sum =('KNetCPL_'+str(product),'sum'))
+                                .agg(price_basis_average=(str(product) +'_BASIS','mean'),vol_sum = ('NetCPL_'+str(product),'sum'),Kvol_sum =('KNetCPL_'+str(product),'sum'))
                                )
         product_winter_df = (winter_df
                                 .groupby('yr_cy')
-                                .agg(price_basis_average=(str(product) +'_PRICE','mean'),vol_sum = ('NetCPL_'+str(product),'sum'),Kvol_sum =('KNetCPL_'+str(product),'sum'))
+                                .agg(price_basis_average=(str(product) +'_BASIS','mean'),vol_sum = ('NetCPL_'+str(product),'sum'),Kvol_sum =('KNetCPL_'+str(product),'sum'))
                                )
 
         product_summer_df['price_basis_stationary'] = product_summer_df['price_basis_average'].diff()
@@ -234,8 +234,7 @@ def make_plot(df,period,start_date1,end_date1,product,n_click_reset = 1):
 #     frame = [product_summer_df,product_winter_df]
 #     merged_df = pd.concat(frame,keys=["summer","winter"])
     
-    fig= px.scatter(master_df, x='Kvol_sum', y='price_basis_stationary',trendline ='ols', color = master_df.index.get_level_values(0), height = 700, labels={
-                     "price_basis_stationary": "price_basis_change",},)
+    fig= px.scatter(master_df, x='Kvol_sum', y='price_basis_stationary',trendline ='ols', color = master_df.index.get_level_values(0), height = 700)
     results = pd.concat(analysis)
 
     ########added line to handle duplicate tables########
@@ -248,7 +247,7 @@ def make_plot(df,period,start_date1,end_date1,product,n_click_reset = 1):
 
 
 def historical_price_vol(df):
-    quote_ls = [i[:-6] for i in clean_merged_data.columns[clean_merged_data.columns.str.contains('_PRICE')]]
+    quote_ls = df.columns[df.columns.str.contains('_BASIS')]
 
     type = "category"   
     rangeselector = None
@@ -260,11 +259,11 @@ def historical_price_vol(df):
     # Add traces
     for q in quote_ls:
         fig.add_trace(
-            go.Scatter(x=df.index, y=df[q+'_PRICE'], name=str(q)+ "(cpg)"),
+            go.Scatter(x=df.index, y=df[q], name=str(q)+ "(cpg)"),
             secondary_y=True,)
     
         fig.add_trace(
-            go.Bar(x=df.index, y=df['KNetCPL_'+ q], name="CPL HoP Net Traded "+str(q)+" (KBBL/CY)"),
+            go.Bar(x=df.index, y=df['KNetCPL_'+ q[:-6]], name="CPL HoP Net Traded "+str(q[:-6])+" (KBBL/CY)"),
             secondary_y=False,
         )
     # Add figure title

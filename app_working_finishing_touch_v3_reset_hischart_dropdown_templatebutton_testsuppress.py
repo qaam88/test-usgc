@@ -48,11 +48,11 @@ def parse_data(contents, filename):
 # Load data
 #reading price data
 
-price_data = pd.read_csv('price_data_v2.csv')
+price_data = pd.read_csv('price_data_template.csv')
 
 #reading volume data
 
-vol_data = pd.read_csv('CPL_net_traded_volume.csv')
+vol_data = pd.read_csv('CPL_net_traded_volume_template.csv')
 
 # def create_plot(df, columns):
 #     fig = px.line(df, x=df.index.get_level_values(1), y=df[columns], color = df.index.get_level_values(0) ,facet_col = df.index.get_level_values(0),labels = dict(x="Date"))
@@ -71,7 +71,7 @@ vol_data = pd.read_csv('CPL_net_traded_volume.csv')
 
 clean_merged_data,clean_merged_data_agg_cy = data_preprocess(price_data,vol_data)
 
-product_list = [i[:-6] for i in clean_merged_data.columns[clean_merged_data.columns.str.contains('_BASIS')]]
+product_list = [i[:-6] for i in clean_merged_data_agg_cy.columns[clean_merged_data_agg_cy.columns.str.contains('_PRICE')]]
 
 period_dict = {}
 n_click_reset = 0
@@ -141,7 +141,7 @@ sidebar = html.Div(
         ),
         html.Div('Select the product you are interested in'),
         dcc.Dropdown(
-            options = ['CBOB','RBOB','PBOB','PCBOB','JET','ULSD'],
+            options = product_list,
             value ='CBOB',
             id = 'first-var'
         ),
@@ -235,8 +235,8 @@ content = html.Div(
         ]),
 
         dbc.Row([
-        dbc.Col(html.A(html.Div('Click here for price example template '),href='https://mysite.na.xom.com/personal/ap_u310512/Shared%20Documents/price_data_reg_conv_V1.csv?d=w780e3ba900d14fc7b574dd0c8fb170a9'),),
-        dbc.Col(html.A(html.Div('Click here for volume example template '),href='https://mysite.na.xom.com/personal/ap_u310512/Shared%20Documents/CPL_net_traded_volume_reg_conv_V1.csv?d=wcd49fc7ccb194f74b88d41d0f87e7b3b'),),
+        dbc.Col(html.A(html.Div('Click here for price example template '),href='https://mysite.na.xom.com/personal/ap_u310512/Shared%20Documents/price_data_template.csv?d=w806ffd64c5fe4a75977b81ce38fc22c7'),),
+        dbc.Col(html.A(html.Div('Click here for volume example template '),href='https://mysite.na.xom.com/personal/ap_u310512/Shared%20Documents/CPL_net_traded_volume_template.csv?d=we6e51290ea354be9a05e616f47a0df59'),),
         ]),
         html.Hr(),
         dcc.Graph(id = 'hischart', figure = fig1),
@@ -291,7 +291,7 @@ def update_hischart(price_contents,price_filename,price_last_modfidied,volume_co
 
     fig = historical_price_vol(clean_merged_data_agg_cy)
 
-    product_list = [i[:-6] for i in clean_merged_data_agg_cy.columns[clean_merged_data_agg_cy.columns.str.contains('_BASIS')]]
+    product_list = [i[:-6] for i in clean_merged_data_agg_cy.columns[clean_merged_data_agg_cy.columns.str.contains('_PRICE')]]
 
 
     
